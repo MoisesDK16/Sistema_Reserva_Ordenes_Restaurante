@@ -1,0 +1,172 @@
+﻿@model Restaurante_Moises_Loor.Models.Orden
+
+<h4>Crear Orden</h4>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Selección de Cliente -->
+            <div class="form-group">
+                <label asp-for="UsuarioId" class="control-label"></label>
+                <select asp-for="UsuarioId" class="form-control" asp-items="ViewBag.IdUsuario">
+                    <option value="">Seleccione un Cliente</option>
+                </select>
+            </div>
+
+            <!-- Método de Pago -->
+            <div class="form-group">
+                <label asp-for="MetodoPago" class="control-label"></label>
+                <select asp-for="MetodoPago" class="form-control">
+                    <option value="">Seleccione método de pago</option>
+                    <option value="EFECTIVO">EFECTIVO</option>
+                    <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                </select>
+                <span asp-validation-for="MetodoPago" class="text-danger"></span>
+            </div>
+
+            <hr>
+
+            <!-- Sección de Detalles -->
+            <h5>Detalles de la Orden</h5>
+            <div id="detalles-container">
+                <div class="detalle">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label>Menú</label>
+                            <select name="detalles[0].MenuId" class="form-control menu-select">
+                                <option value="">Seleccione un menú</option>
+                                @foreach (var menu in ViewBag.Menus)
+                                {
+                                    <option value="@menu.Value">@menu.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Cantidad</label>
+                            <input type="number" name="detalles[0].Cantidad" class="form-control cantidad-input" min="1" value="1" required />
+                            <span class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Subtotal</label>
+                            <input type="number" name="detalles[0].Subtotal" class="form-control subtotal-input" required readonly />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm remove-detalle">X</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón para agregar más detalles -->
+            <button type="button" class="btn btn-secondary mt-2" id="add-detalle">Agregar otro producto</button>
+
+            <hr>
+
+            <!-- Botón de envío -->
+            <div class="form-group">
+                <input type="submit" value="Crear Orden" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Volver a la Lista</a>
+</div>
+
+@section Scripts {
+    @Html.RenderPartialAsync("_ValidationScriptsPartial")
+
+    <script>
+        let detalleIndex = 1; // Índice para nuevos detalles
+
+        // Lista de menús obtenida desde ViewBag
+        let menusData = @Html.Raw(Json.Serialize(ViewBag.MenusDict));
+
+        // Función para calcular el subtotal
+        function actualizarSubtotal(detalle) {
+            let menuSelect = detalle.querySelector(".menu-select");
+            let cantidadInput = detalle.querySelector(".cantidad-input");
+            let subtotalInput = detalle.querySelector(".subtotal-input");
+
+            let menuId = menuSelect.value.toString(); // 🔹 Convertir menuId a string
+
+            console.log("Seleccionado MenuId:", menuId); // 🔹 Depuración
+            console.log("Contenido de menusData:", menusData); // 🔹 Verificar estructura
+
+            let menuData = menusData[menuId]; // 🔹 Acceder correctamente a los datos
+
+            if (!menuData) {
+                console.error("menuData es NULL para MenuId:", menuId); // 🔹 Ver mensaje si sigue fallando
+                subtotalInput.value = "0.00";
+                return;
+            }
+
+            let cantidad = parseInt(cantidadInput.value) || 0;
+            let precio = parseFloat(menuData["Precio"]) || 0; // 🔹 Asegurar el acceso correcto
+
+            let subtotal = cantidad * precio;
+            subtotalInput.value = subtotal.toFixed(2).replace(",", "."); // 🔹 Formato correcto
+        }
+
+
+        // Agregar nuevo detalle
+        document.getElementById("add-detalle").addEventListener("click", function () {
+            let container = document.getElementById("detalles-container");
+            let newDetail = document.createElement("div");
+            newDetail.classList.add("detalle");
+
+            let menuOptions = Object.entries(menusData)
+                .map(([id, data]) => `<option value="${id}">${data.Nombre}</option>`)
+                .join('');
+
+            newDetail.innerHTML = `
+                <div class="row mt-2">
+                    <div class="col-md-5">
+                        <select name="detalles[${detalleIndex}].MenuId" class="form-control menu-select">
+                            <option value="">Seleccione un menú</option>
+                            ${menuOptions}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="detalles[${detalleIndex}].Cantidad" class="form-control cantidad-input" min="1" value="1" required />
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="detalles[${detalleIndex}].Subtotal" class="form-control subtotal-input" step="0.01" min="0" required readonly />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-danger btn-sm remove-detalle">X</button>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(newDetail);
+            detalleIndex++;
+
+            // Agregar eventos al nuevo detalle
+            newDetail.querySelector(".menu-select").addEventListener("change", function () {
+                actualizarSubtotal(newDetail);
+            });
+            newDetail.querySelector(".cantidad-input").addEventListener("input", function () {
+                actualizarSubtotal(newDetail);
+            });
+        });
+
+        // Eliminar un detalle
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-detalle")) {
+                e.target.closest(".detalle").remove();
+            }
+        });
+
+        // Calcular el subtotal cuando se cambia un menú o cantidad existente
+        document.addEventListener("change", function (e) {
+            if (e.target.classList.contains("menu-select") || e.target.classList.contains("cantidad-input")) {
+                let detalle = e.target.closest(".detalle");
+                actualizarSubtotal(detalle);
+            }
+        });
+    </script>
+}

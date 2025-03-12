@@ -1,0 +1,57 @@
+﻿@model Restaurante_Moises_Loor.Models.Orden
+
+<h2 class="text-danger">Detalles de la Orden</h2>
+
+<div class="card shadow p-4">
+    <h4 class="mb-3">Orden #@Model.Id</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Cliente:</dt>
+        <dd class="col-sm-10">
+            @(Model.Usuario != null ? Model.Usuario.Nombre + " " + Model.Usuario.Apellido : "Sin Cliente")
+        </dd>
+
+        <dt class="col-sm-2">Fecha:</dt>
+        <dd class="col-sm-10">@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-2">Total:</dt>
+        <dd class="col-sm-10 text-success">$@Model.Total.ToString("F2")</dd>
+
+        <dt class="col-sm-2">Método de Pago:</dt>
+        <dd class="col-sm-10">@Model.MetodoPago</dd>
+    </dl>
+
+    <h5>Detalles de la Orden</h5>
+    <table class="table table-bordered">
+        <thead class="thead-dark">
+            <tr>
+                <th>Menú</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Detalles != null && Model.Detalles.Any())
+            {
+                @foreach (var detalle in Model.Detalles)
+                {
+                    <tr>
+                        <td>@(detalle.Menu != null ? detalle.Menu.Nombre : "Sin menú")</td>
+                        <td>@detalle.Cantidad</td>
+                        <td>$@detalle.Subtotal.ToString("F2")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="3" class="text-center text-danger">No hay detalles en esta orden</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
