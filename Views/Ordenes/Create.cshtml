@@ -6,8 +6,6 @@
     <div class="col-md-6">
         <form asp-action="Create" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <!-- Selección de Cliente -->
             <div class="form-group">
                 <label asp-for="UsuarioId" class="control-label"></label>
                 <select asp-for="UsuarioId" class="form-control" asp-items="ViewBag.IdUsuario">
@@ -15,7 +13,6 @@
                 </select>
             </div>
 
-            <!-- Método de Pago -->
             <div class="form-group">
                 <label asp-for="MetodoPago" class="control-label"></label>
                 <select asp-for="MetodoPago" class="form-control">
@@ -28,7 +25,6 @@
 
             <hr>
 
-            <!-- Sección de Detalles -->
             <h5>Detalles de la Orden</h5>
             <div id="detalles-container">
                 <div class="detalle">
@@ -59,12 +55,10 @@
                 </div>
             </div>
 
-            <!-- Botón para agregar más detalles -->
             <button type="button" class="btn btn-secondary mt-2" id="add-detalle">Agregar otro producto</button>
 
             <hr>
 
-            <!-- Botón de envío -->
             <div class="form-group">
                 <input type="submit" value="Crear Orden" class="btn btn-primary" />
             </div>
@@ -80,35 +74,33 @@
     @Html.RenderPartialAsync("_ValidationScriptsPartial")
 
     <script>
-        let detalleIndex = 1; // Índice para nuevos detalles
+        let detalleIndex = 1; 
 
-        // Lista de menús obtenida desde ViewBag
         let menusData = @Html.Raw(Json.Serialize(ViewBag.MenusDict));
 
-        // Función para calcular el subtotal
         function actualizarSubtotal(detalle) {
             let menuSelect = detalle.querySelector(".menu-select");
             let cantidadInput = detalle.querySelector(".cantidad-input");
             let subtotalInput = detalle.querySelector(".subtotal-input");
 
-            let menuId = menuSelect.value.toString(); // 🔹 Convertir menuId a string
+            let menuId = menuSelect.value.toString(); 
 
-            console.log("Seleccionado MenuId:", menuId); // 🔹 Depuración
-            console.log("Contenido de menusData:", menusData); // 🔹 Verificar estructura
+            console.log("Seleccionado MenuId:", menuId);
+            console.log("Contenido de menusData:", menusData); 
 
-            let menuData = menusData[menuId]; // 🔹 Acceder correctamente a los datos
+            let menuData = menusData[menuId]; 
 
             if (!menuData) {
-                console.error("menuData es NULL para MenuId:", menuId); // 🔹 Ver mensaje si sigue fallando
+                console.error("menuData es NULL para MenuId:", menuId); 
                 subtotalInput.value = "0.00";
                 return;
             }
 
             let cantidad = parseInt(cantidadInput.value) || 0;
-            let precio = parseFloat(menuData["Precio"]) || 0; // 🔹 Asegurar el acceso correcto
+            let precio = parseFloat(menuData["Precio"]) || 0; 
 
             let subtotal = cantidad * precio;
-            subtotalInput.value = subtotal.toFixed(2).replace(",", "."); // 🔹 Formato correcto
+            subtotalInput.value = subtotal.toFixed(2).replace(",", "."); 
         }
 
 
@@ -145,7 +137,6 @@
             container.appendChild(newDetail);
             detalleIndex++;
 
-            // Agregar eventos al nuevo detalle
             newDetail.querySelector(".menu-select").addEventListener("change", function () {
                 actualizarSubtotal(newDetail);
             });
@@ -154,14 +145,12 @@
             });
         });
 
-        // Eliminar un detalle
         document.addEventListener("click", function (e) {
             if (e.target.classList.contains("remove-detalle")) {
                 e.target.closest(".detalle").remove();
             }
         });
 
-        // Calcular el subtotal cuando se cambia un menú o cantidad existente
         document.addEventListener("change", function (e) {
             if (e.target.classList.contains("menu-select") || e.target.classList.contains("cantidad-input")) {
                 let detalle = e.target.closest(".detalle");
